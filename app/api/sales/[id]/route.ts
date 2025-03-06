@@ -12,11 +12,15 @@ export async function GET(
       },
       include: {
         items: true,
-        user: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true,
+        transaction: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                fullName: true,
+                email: true,
+              },
+            },
           },
         },
       },
