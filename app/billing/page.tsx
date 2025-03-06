@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { Bill, BillStatus } from '@prisma/client';
-import { format } from 'date-fns';
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { Bill } from "@prisma/client";
+import { format } from "date-fns";
+
+type BillStatus = "PENDING" | "PAID" | "OVERDUE";
 
 interface BillWithCustomer extends Bill {
   customer: {
@@ -12,6 +14,7 @@ interface BillWithCustomer extends Bill {
     email: string;
   };
 }
+
 
 export default function BillingPage() {
   const { data: session, status } = useSession();
@@ -21,45 +24,45 @@ export default function BillingPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/signin');
+    if (status === "unauthenticated") {
+      router.push("/signin");
       return;
     }
 
     const fetchBills = async () => {
       try {
-        const response = await fetch('/api/bills');
+        const response = await fetch("/api/bills");
         if (!response.ok) {
-          throw new Error('Failed to fetch bills');
+          throw new Error("Failed to fetch bills");
         }
         const data = await response.json();
         setBills(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
         setLoading(false);
       }
     };
 
-    if (status === 'authenticated') {
+    if (status === "authenticated") {
       fetchBills();
     }
   }, [status, router]);
 
   const getStatusColor = (status: BillStatus) => {
     switch (status) {
-      case 'PAID':
-        return 'bg-green-100 text-green-800';
-      case 'PENDING':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'OVERDUE':
-        return 'bg-red-100 text-red-800';
+      case "PAID":
+        return "bg-green-100 text-green-800";
+      case "PENDING":
+        return "bg-yellow-100 text-yellow-800";
+      case "OVERDUE":
+        return "bg-red-100 text-red-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
-  if (status === 'loading' || loading) {
+  if (status === "loading" || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -83,7 +86,7 @@ export default function BillingPage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Bills</h1>
         <button
-          onClick={() => router.push('/billing/new')}
+          onClick={() => router.push("/billing/new")}
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
         >
           Create New Bill
@@ -127,10 +130,10 @@ export default function BillingPage() {
                   ${bill.amount.toFixed(2)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {format(new Date(bill.dueDate), 'MMM dd, yyyy')}
+                  {format(new Date(bill.dueDate), "MMM dd, yyyy")}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(bill.status)}`}>
+                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(bill.status as BillStatus)}`}>
                     {bill.status}
                   </span>
                 </td>
@@ -149,4 +152,4 @@ export default function BillingPage() {
       </div>
     </div>
   );
-} 
+}
