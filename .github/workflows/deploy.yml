@@ -1,1 +1,24 @@
-name: Deploy to GitHub Pages\n\non:\n  push:\n    branches: [ main ]\n  workflow_dispatch:\n\npermissions:\n  contents: read\n  pages: write\n  id-token: write\n\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - name: Setup Node.js\n        uses: actions/setup-node@v4\n        with:\n          node-version: "18"\n          cache: "npm"\n      - name: Configure npm\n        run: |\n          npm config set fetch-retries 5\n          npm config set fetch-retry-mintimeout 10000\n          npm config set fetch-retry-maxtimeout 60000\n      - name: Install dependencies\n        run: |\n          for i in {1..3}; do\n            echo "Attempt $i of 3 to install dependencies..."\n            npm install && break\n            if [ $i -eq 3 ]; then\n              echo "Failed to install dependencies after 3 attempts"\n              exit 1\n            fi\n            echo "Retrying in 10 seconds..."\n            sleep 10\n          done\n      - name: Cache Next.js build\n        uses: actions/cache@v4\n        with:\n          path: |\n            .next/cache\n          key: ${{ runner.os }}-nextjs-${{ hashFiles("**/package-lock.json") }}-${{ hashFiles("**.[jt]s", "**.[jt]sx") }}\n          restore-keys: |\n            ${{ runner.os }}-nextjs-${{ hashFiles("**/package-lock.json") }}-\n      - name: Build\n        run: npm run build -- --no-lint\n        env:\n          DATABASE_URL: ${{ secrets.DATABASE_URL }}\n          JWT_SECRET: ${{ secrets.JWT_SECRET }}\n          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}\n          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}\n\n  deploy:\n    needs: build\n    runs-on: ubuntu-latest\n    environment:\n      name: github-pages\n      url: ${{ steps.deployment.outputs.page_url }}\n    steps:\n      - uses: actions/checkout@v4\n      - name: Setup Pages\n        uses: actions/configure-pages@v4\n      - name: Upload artifact\n        uses: actions/upload-pages-artifact@v3\n        with:\n          path: "./out"\n      - name: Deploy to GitHub Pages\n        id: deployment\n        uses: actions/deploy-pages@v4
+name: Deploy to GitHub Pages
+on:
+  push:
+    branches: [ main ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+      - name: Install dependencies
+        run: npm install
+      - name: Build
+        run: npm run build -- --no-lint
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy
+        uses: actions/deploy-pages@v4
