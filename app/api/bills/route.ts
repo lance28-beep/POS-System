@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { BillStatus } from '@prisma/client';
 
 export async function GET() {
   try {
@@ -44,10 +45,10 @@ export async function POST(request: Request) {
       data: {
         number,
         type,
-        amount,
+        amount: parseFloat(amount),
         dueDate: new Date(dueDate),
         description,
-        status: 'pending',
+        status: BillStatus.PENDING,
       },
     });
 
