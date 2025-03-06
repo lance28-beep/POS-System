@@ -6,8 +6,7 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const body = await request.json();
-    const { status } = body;
+    const { status } = await request.json();
 
     if (!status) {
       return NextResponse.json(
@@ -18,8 +17,12 @@ export async function PATCH(
 
     // Update bill status
     const bill = await prisma.bill.update({
-      where: { id: params.id },
-      data: { status },
+      where: {
+        id: params.id,
+      },
+      data: {
+        status,
+      },
     });
 
     return NextResponse.json(bill);

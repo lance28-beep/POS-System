@@ -7,11 +7,16 @@ export async function GET(
 ) {
   try {
     const sale = await prisma.sale.findUnique({
-      where: { id: params.id },
+      where: {
+        id: params.id,
+      },
       include: {
-        items: {
-          include: {
-            product: true,
+        items: true,
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
           },
         },
       },
@@ -49,55 +54,41 @@ export async function PATCH(
       );
     }
 
-    // Get the sale with its items
-    const sale = await prisma.sale.findUnique({
-      where: { id: params.id },
-      include: {
-        items: true,
+    const sale = await prisma.sale.update({
+      where: {
+        id: params.id,
+      },
+      data: {
+        status,
       },
     });
 
-    if (!sale) {
-      return NextResponse.json(
-        { message: 'Sale not found' },
-        { status: 404 }
-      );
-    }
-
-    // If cancelling, restore product stocks
-    if (status === 'cancelled' && sale.status === 'completed') {
-      await prisma.$transaction(async (tx) => {
-        // Update sale status
-        await tx.sale.update({
-          where: { id: params.id },
-          data: { status },
-        });
-
-        // Restore product stocks
-        for (const item of sale.items) {
-          await tx.product.update({
-            where: { id: item.productId },
-            data: {
-              stocks: {
-                increment: item.quantity,
-              },
-            },
-          });
-        }
-      });
-    } else {
-      // Just update the status
-      await prisma.sale.update({
-        where: { id: params.id },
-        data: { status },
-      });
-    }
-
-    return NextResponse.json({ message: 'Sale updated successfully' });
+    return NextResponse.json(sale);
   } catch (error) {
     console.error('Error updating sale:', error);
     return NextResponse.json(
       { message: 'Error updating sale' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    await prisma.sale.delete({
+      where: {
+        id: params.id,
+      },
+    });
+
+    return NextResponse.json({ message: 'Sale deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting sale:', error);
+    return NextResponse.json(
+      { message: 'Error deleting sale' },
       { status: 500 }
     );
   }
