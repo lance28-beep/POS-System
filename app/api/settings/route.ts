@@ -1,12 +1,32 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth/next';
+import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {
-    const settings = await prisma.settings.findFirst();
-    return NextResponse.json(settings || {});
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json(
+        { message: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const settings = await prisma.settings.findUnique({
+      where: {
+        id: '1',
+      },
+    });
+
+    if (!settings) {
+      return NextResponse.json(
+        { message: 'Settings not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(settings);
   } catch (error) {
     console.error('Error fetching settings:', error);
     return NextResponse.json(
@@ -16,7 +36,7 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function PUT(request: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user || session.user.accountType !== 'admin') {
@@ -40,33 +60,11 @@ export async function POST(request: Request) {
       language,
     } = body;
 
-    // Validate required fields
-    if (!companyName || !address || !phone || !email || !currency || !taxRate || !timezone || !dateFormat || !theme || !language) {
-      return NextResponse.json(
-        { message: 'All fields are required' },
-        { status: 400 }
-      );
-    }
-
-    // Upsert settings
-    const settings = await prisma.settings.upsert({
+    const settings = await prisma.settings.update({
       where: {
-        id: '1', // We only have one settings record
-      },
-      update: {
-        companyName,
-        address,
-        phone,
-        email,
-        currency,
-        taxRate,
-        timezone,
-        dateFormat,
-        theme,
-        language,
-      },
-      create: {
         id: '1',
+      },
+      data: {
         companyName,
         address,
         phone,
@@ -82,9 +80,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(settings);
   } catch (error) {
-    console.error('Error saving settings:', error);
+    console.error('Error updating settings:', error);
     return NextResponse.json(
-      { message: 'Error saving settings' },
+      { message: 'Error updating settings' },
       { status: 500 }
     );
   }
