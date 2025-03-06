@@ -6,9 +6,9 @@
   "framework": "nextjs",
   "regions": ["sin1"],
   "env": {
-    "DATABASE_URL": "@database_url",
-    "JWT_SECRET": "@jwt_secret",
-    "NEXTAUTH_SECRET": "@nextauth_secret",
-    "NEXTAUTH_URL": "@nextauth_url"
+    "DATABASE_URL": "${DATABASE_URL}",
+    "JWT_SECRET": "${JWT_SECRET}",
+    "NEXTAUTH_SECRET": "${NEXTAUTH_SECRET}",
+    "NEXTAUTH_URL": "${NEXTAUTH_URL}"
   }
 } 
