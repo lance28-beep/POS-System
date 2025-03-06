@@ -1,7 +1,7 @@
 'use client';
 
 import AdminLayout from '../../components/layouts/AdminLayout';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Receipt from '../../components/Receipt';
 
@@ -38,25 +38,25 @@ export default function SaleDetails({ params }: { params: { id: string } }) {
   const [showReceipt, setShowReceipt] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    fetchSale();
-  }, [params.id]);
-
-  const fetchSale = async () => {
+  const fetchSale = useCallback(async () => {
     try {
       const response = await fetch(`/api/sales/${params.id}`);
       if (!response.ok) {
-        throw new Error('Failed to fetch sale details');
+        throw new Error('Failed to fetch sale');
       }
       const data = await response.json();
       setSale(data);
+      setLoading(false);
     } catch (error) {
       console.error('Error fetching sale:', error);
       setError('Failed to load sale details');
-    } finally {
       setLoading(false);
     }
-  };
+  }, [params.id]);
+
+  useEffect(() => {
+    fetchSale();
+  }, [fetchSale]);
 
   const handleCancel = async () => {
     if (!confirm('Are you sure you want to cancel this sale?')) return;
