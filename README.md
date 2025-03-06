@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# POS Inventory Billing System
 
-## Getting Started
+A web-based POS inventory and billing system for businesses to manage sales, track inventory, and streamline invoicing efficiently.
 
-First, run the development server:
+## Features
+
+- User Authentication
+- Dashboard with Analytics
+- Inventory Management
+- Sales Management
+- Transaction Tracking
+- Billing System
+- User Management
+- Settings Configuration
+
+## Deployment to GitHub Pages
+
+1. Fork this repository
+2. Go to your repository settings
+3. Navigate to "Pages" section
+4. Under "Source", select "GitHub Actions"
+5. Add the following secrets to your repository:
+   - `DATABASE_URL`
+   - `JWT_SECRET`
+   - `NEXTAUTH_SECRET`
+   - `NEXTAUTH_URL` (set to your GitHub Pages URL)
+
+## Local Development
+
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Set up environment variables in `.env`:
+   ```
+   DATABASE_URL="your_database_url"
+   JWT_SECRET="your_jwt_secret"
+   NEXTAUTH_SECRET="your_nextauth_secret"
+   NEXTAUTH_URL="http://localhost:3000"
+   ```
+4. Run the development server:
+   ```bash
+   npm run dev
+   ```
+
+## Build for Production
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The static files will be generated in the `out` directory.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## License
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
