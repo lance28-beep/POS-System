@@ -1,1 +1,57 @@
-name: Deploy to GitHub Pages\n\non:\n  push:\n    branches: [ main ]\n  workflow_dispatch:\n\npermissions:\n  contents: read\n  pages: write\n  id-token: write\n\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v3\n      - name: Setup Node.js\n        uses: actions/setup-node@v3\n        with:\n          node-version: "18"\n          cache: "npm"\n      - name: Install dependencies\n        run: npm install\n      - name: Cache Next.js build\n        uses: actions/cache@v3\n        with:\n          path: |\n            .next/cache\n          key: ${{ runner.os }}-nextjs-${{ hashFiles("**/package-lock.json") }}-${{ hashFiles("**.[jt]s", "**.[jt]sx") }}\n          restore-keys: |\n            ${{ runner.os }}-nextjs-${{ hashFiles("**/package-lock.json") }}-\n      - name: Build\n        run: npm run build -- --no-lint\n        env:\n          DATABASE_URL: ${{ secrets.DATABASE_URL }}\n          JWT_SECRET: ${{ secrets.JWT_SECRET }}\n          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}\n          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}\n\n  deploy:\n    needs: build\n    runs-on: ubuntu-latest\n    environment:\n      name: github-pages\n      url: ${{ steps.deployment.outputs.page_url }}\n    steps:\n      - uses: actions/checkout@v3\n      - name: Setup Pages\n        uses: actions/configure-pages@v3\n      - name: Upload artifact\n        uses: actions/upload-pages-artifact@v2\n        with:\n          path: "./out"\n      - name: Deploy to GitHub Pages\n        id: deployment\n        uses: actions/deploy-pages@v2
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "npm"
+      - name: Install dependencies
+        run: npm install
+      - name: Cache Next.js build
+        uses: actions/cache@v3
+        with:
+          path: |
+            .next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles("**/package-lock.json") }}-${{ hashFiles("**.[jt]s", "**.[jt]sx") }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles("**/package-lock.json") }}-
+      - name: Build
+        run: npm run build -- --no-lint
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: "./out"
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
