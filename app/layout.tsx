@@ -34,7 +34,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={inter.className}>
-      <body>
+      <body className="min-h-screen bg-gray-50">
         <Providers>{children}</Providers>
       </body>
     </html>
