@@ -16,7 +16,7 @@ export default function CreateAccount() {
     username: '',
     password: '',
     confirmPassword: '',
-    role: 'user',
+    accountType: 'user',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,7 +28,7 @@ export default function CreateAccount() {
     username: '',
     password: '',
     confirmPassword: '',
-    role: '',
+    accountType: '',
   });
 
   const validateForm = () => {
@@ -40,7 +40,7 @@ export default function CreateAccount() {
       username: '',
       password: '',
       confirmPassword: '',
-      role: '',
+      accountType: '',
     };
     let isValid = true;
 
@@ -123,22 +123,23 @@ export default function CreateAccount() {
     setLoading(true);
     setError('');
 
+    const { confirmPassword, ...registrationData } = formData;
+
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(registrationData),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
+        const data = await response.json();
         throw new Error(data.message || 'Failed to create account');
       }
 
-      router.push('/login');
+      router.push('/login?success=true');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create account');
     } finally {
@@ -257,13 +258,13 @@ export default function CreateAccount() {
                 {/* Right Column */}
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="accountType" className="block text-sm font-medium text-gray-700 mb-1">
                       Account Type
                     </label>
                     <select
-                      id="role"
-                      name="role"
-                      value={formData.role}
+                      id="accountType"
+                      name="accountType"
+                      value={formData.accountType}
                       onChange={handleSelectChange}
                       className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#328f90] focus:border-transparent transition-colors duration-200"
                     >

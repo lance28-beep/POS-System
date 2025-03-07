@@ -12,36 +12,47 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        if (!credentials?.username || !credentials?.password) {
+        try {
+          if (!credentials?.username || !credentials?.password) {
+            console.log('Missing credentials');
+            return null;
+          }
+
+          console.log('Looking up user:', credentials.username);
+          const user = await prisma.user.findUnique({
+            where: {
+              username: credentials.username,
+            },
+          });
+
+          if (!user) {
+            console.log('User not found');
+            return null;
+          }
+
+          console.log('Comparing passwords');
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password,
+            user.password
+          );
+
+          if (!isPasswordValid) {
+            console.log('Invalid password');
+            return null;
+          }
+
+          console.log('Login successful');
+          return {
+            id: user.id,
+            name: user.fullName,
+            email: user.email,
+            role: user.jobRole,
+            accountType: user.accountType,
+          };
+        } catch (error) {
+          console.error('Authorization error:', error);
           return null;
         }
-
-        const user = await prisma.user.findUnique({
-          where: {
-            username: credentials.username,
-          },
-        });
-
-        if (!user) {
-          return null;
-        }
-
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
-
-        if (!isPasswordValid) {
-          return null;
-        }
-
-        return {
-          id: user.id,
-          name: user.fullName,
-          email: user.email,
-          role: user.jobRole,
-          accountType: user.accountType,
-        };
       },
     })
   ],
@@ -71,5 +82,6 @@ export const authOptions: NextAuthOptions = {
     signIn: '/login',
     error: '/login', // Redirect to login page on error
   },
+  debug: process.env.NODE_ENV === 'development',
   secret: process.env.NEXTAUTH_SECRET || process.env.JWT_SECRET,
 }; 

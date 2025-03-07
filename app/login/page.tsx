@@ -90,20 +90,29 @@ export default function Login() {
     setError('');
 
     try {
+      console.log('Attempting to sign in with:', { username: formData.username });
       const result = await signIn('credentials', {
         username: formData.username,
         password: formData.password,
         redirect: false,
       });
 
+      console.log('Sign in result:', result);
+
       if (result?.error) {
         setError(result.error === 'CredentialsSignin' ? 'Invalid username or password' : result.error);
+        return;
+      }
+
+      if (!result?.ok) {
+        setError('Failed to sign in. Please try again.');
         return;
       }
 
       router.push('/dashboard');
       router.refresh();
     } catch (err) {
+      console.error('Login error:', err);
       setError(err instanceof Error ? err.message : 'Failed to login');
     } finally {
       setLoading(false);
