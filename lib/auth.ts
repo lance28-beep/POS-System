@@ -2,6 +2,29 @@ import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET || '';
+
+export interface JWTPayload {
+  userId: string;
+  accountType: string;
+  email: string;
+}
+
+export async function verifyJwtToken(token: string): Promise<JWTPayload | null> {
+  try {
+    const verified = jwt.verify(token, JWT_SECRET) as JWTPayload;
+    return verified;
+  } catch (error) {
+    console.error('JWT verification error:', error);
+    return null;
+  }
+}
+
+export async function createJwtToken(payload: JWTPayload): Promise<string> {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: '1d' });
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [

@@ -1,27 +1,26 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import jwt from 'jsonwebtoken';
+import { verifyJwtToken } from '@/lib/auth';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
+
+async function validateToken(request: Request) {
+  const authHeader = request.headers.get('authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+  const token = authHeader.split(' ')[1];
+  return await verifyJwtToken(token);
+}
 
 export async function GET(request: Request) {
   try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    const verified = await validateToken(request);
+    if (!verified) {
       return NextResponse.json(
-        { message: 'Unauthorized' },
+        { error: 'Unauthorized' },
         { status: 401 }
-      );
-    }
-
-    const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; accountType: string };
-
-    // Check if user is admin
-    if (decoded.accountType !== 'admin') {
-      return NextResponse.json(
-        { message: 'Forbidden' },
-        { status: 403 }
       );
     }
 
@@ -29,22 +28,46 @@ export async function GET(request: Request) {
       select: {
         id: true,
         fullName: true,
-        username: true,
         email: true,
         jobRole: true,
+        contactNumber: true,
+        username: true,
         accountType: true,
         createdAt: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
+        updatedAt: true,
       },
     });
 
-    return NextResponse.json({ users });
+    return NextResponse.json(users);
   } catch (error) {
     console.error('Error fetching users:', error);
     return NextResponse.json(
-      { message: 'Internal server error' },
+      { error: 'Internal Server Error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const verified = await validateToken(request);
+    if (!verified) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+    const user = await prisma.user.create({
+      data: body,
+    });
+
+    return NextResponse.json(user);
+  } catch (error) {
+    console.error('Error creating user:', error);
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
       { status: 500 }
     );
   }
