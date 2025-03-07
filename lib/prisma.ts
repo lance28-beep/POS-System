@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { Pool } from '@neondatabase/serverless';
 
 declare global {
   var prisma: PrismaClient | undefined;
@@ -22,7 +23,13 @@ const prismaClientSingleton = () => {
       db: {
         url: process.env.DATABASE_URL
       }
-    }
+    },
+    // Configure Prisma to use Neon's connection pool
+    adapter: {
+      pool: new Pool({
+        connectionString: process.env.DATABASE_URL,
+      }),
+    },
   });
 };
 
