@@ -1,20 +1,18 @@
 import { PrismaClient } from '@prisma/client';
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
+declare global {
+  var prisma: PrismaClient | undefined;
+}
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient();
+export const prisma = global.prisma || new PrismaClient({
+  log: ['query', 'error', 'warn'],
+});
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+if (process.env.NODE_ENV !== 'production') {
+  global.prisma = prisma;
+}
 
-// Handle connection errors
-prisma.$connect()
-  .then(() => {
-    console.log('Successfully connected to the database');
-  })
-  .catch((error) => {
-    console.error('Failed to connect to the database:', error);
-  });
+// Log the DATABASE_URL being used (but mask sensitive info)
+const dbUrl = process.env.DATABASE_URL || '';
+console.log('Database URL protocol:', dbUrl.split('://')[0]);
+console.log('Database connection initialized');

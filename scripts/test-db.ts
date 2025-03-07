@@ -1,40 +1,27 @@
 import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
-
-const prisma = new PrismaClient();
 
 async function main() {
+  console.log('Testing database connection...');
+  console.log('DATABASE_URL:', process.env.DATABASE_URL?.split('://')[0] + '://***');
+
+  const prisma = new PrismaClient({
+    log: ['query', 'error', 'warn'],
+  });
+
   try {
-    // Test database connection
+    // Test the connection
     await prisma.$connect();
     console.log('Successfully connected to the database');
 
-    // Create a test user
-    const hashedPassword = await bcrypt.hash('test123', 10);
-    const user = await prisma.user.create({
-      data: {
-        username: 'testuser',
-        password: hashedPassword,
-        fullName: 'Test User',
-        email: 'test@example.com',
-        jobRole: 'Admin',
-        contactNumber: '1234567890',
-        accountType: 'admin',
-      },
-    });
+    // Try to query users
+    const userCount = await prisma.user.count();
+    console.log('Number of users in database:', userCount);
 
-    console.log('Created test user:', user);
-
-    // Query all users
-    const users = await prisma.user.findMany();
-    console.log('All users:', users);
-
-    // Test successful
-    console.log('Database connection and queries successful!');
-  } catch (error) {
-    console.error('Error:', error);
-  } finally {
     await prisma.$disconnect();
+    console.log('Successfully disconnected from the database');
+  } catch (error) {
+    console.error('Database connection error:', error);
+    process.exit(1);
   }
 }
 
