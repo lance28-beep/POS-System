@@ -5,8 +5,10 @@ import bcrypt from 'bcryptjs';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    console.log('Registration request body:', body);
+
     const {
-      accountType,
+      accountType = 'user', // Set default value
       fullName,
       jobRole,
       email,
@@ -16,7 +18,8 @@ export async function POST(request: Request) {
     } = body;
 
     // Validate required fields
-    if (!accountType || !fullName || !jobRole || !email || !contactNumber || !username || !password) {
+    if (!fullName || !jobRole || !email || !contactNumber || !username || !password) {
+      console.log('Missing required fields:', { fullName, jobRole, email, contactNumber, username, password: !!password });
       return NextResponse.json(
         { message: 'All fields are required' },
         { status: 400 }
@@ -71,9 +74,9 @@ export async function POST(request: Request) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error('Registration error details:', error);
     return NextResponse.json(
-      { message: 'Internal server error' },
+      { message: error instanceof Error ? error.message : 'Internal server error' },
       { status: 500 }
     );
   }
