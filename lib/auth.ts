@@ -2,20 +2,21 @@ import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import { SignJWT, jwtVerify } from 'jose';
 
-const JWT_SECRET = process.env.JWT_SECRET || '';
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || '');
 
 export interface JWTPayload {
   userId: string;
   accountType: string;
   email: string;
+  [key: string]: string; // Add index signature for jose compatibility
 }
 
 export async function verifyJwtToken(token: string): Promise<JWTPayload | null> {
   try {
-    const verified = jwt.verify(token, JWT_SECRET) as JWTPayload;
-    return verified;
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+    return payload as unknown as JWTPayload;
   } catch (error) {
     console.error('JWT verification error:', error);
     return null;
@@ -23,7 +24,11 @@ export async function verifyJwtToken(token: string): Promise<JWTPayload | null> 
 }
 
 export async function createJwtToken(payload: JWTPayload): Promise<string> {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '1d' });
+  const jwt = await new SignJWT({ ...payload })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setExpirationTime('24h')
+    .sign(JWT_SECRET);
+  return jwt;
 }
 
 export const authOptions: NextAuthOptions = {

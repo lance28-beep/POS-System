@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyJwtToken } from '@/lib/auth';
 
-export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 async function validateToken(request: Request) {
